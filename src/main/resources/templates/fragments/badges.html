@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<span th:fragment="priority(p)" th:if="${p != null}" class="badge" th:classappend="'text-bg-' + ${p.badgeColor}"
+      th:text="${p.name()}" th:title="${p.label}">P1</span>
+<span th:fragment="status(s)" class="badge" th:classappend="'text-bg-' + ${s.badgeColor}" th:text="${s.label}">New</span>
+<span th:fragment="sla(i)" th:with="st=${@slaView.status(i)}"
+      class="badge" th:classappend="'text-bg-' + ${st.badgeColor}" th:text="${st.label}">On track</span>
+<span th:fragment="risk(r)" th:if="${r != null}" class="badge rounded-pill" th:classappend="'text-bg-' + ${r.level.color}"
+      th:title="${#strings.listJoin(r.reasons, '; ')}" th:text="${r.score} + '% risk'">10%</span>
+</body>
+</html>

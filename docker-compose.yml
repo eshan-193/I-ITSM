@@ -1,0 +1,16 @@
+# Optional: run the app and PostgreSQL together with "docker compose up".
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: itsm
+      POSTGRES_USER: itsm
+      POSTGRES_PASSWORD: itsm
+    ports: ["5432:5432"]
+  app:
+    build: .
+    depends_on: [db]
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/itsm
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports: ["8080:8080"]

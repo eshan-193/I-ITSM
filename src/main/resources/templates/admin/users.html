@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Users')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title mb-3">Users &amp; technicians</h3>
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th class="ps-3">Name</th><th>Email</th><th>Role</th><th>Details</th><th>Status</th><th></th></tr></thead>
+                        <tbody>
+                        <tr th:each="u : ${users}">
+                            <td class="ps-3"><b th:text="${u.name}"></b> <span class="text-muted small" th:text="${u.code}"></span></td>
+                            <td class="small" th:text="${u.email}"></td>
+                            <td><span class="badge text-bg-light border" th:text="${u.role.label}"></span>
+                                <span class="badge text-bg-info" th:if="${u.role.name() == 'TECHNICIAN' and u.teamLead}">Lead</span></td>
+                            <td class="small">
+                                <th:block th:if="${u.role.name() == 'TECHNICIAN'}">
+                                    <span th:text="(${workloads[u.id]} ?: 0) + '/' + ${u.maxActiveIncidents} + ' active'"></span> ·
+                                    <span th:text="${u.available} ? 'available' : 'unavailable'" th:classappend="${u.available} ? 'text-success' : 'text-secondary'"></span>
+                                    <div class="text-muted"><span th:each="s, st : ${u.skills}" th:text="${s.name} + (${st.last} ? '' : ', ')"></span></div>
+                                </th:block>
+                                <span th:if="${u.role.name() == 'EMPLOYEE'}" th:text="${u.department}"></span>
+                                <span th:if="${u.role.name() == 'ADMIN'}" th:text="${u.jobTitle}"></span>
+                            </td>
+                            <td><span class="badge" th:classappend="${u.active} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${u.active} ? 'Active' : 'Disabled'"></span></td>
+                            <td><a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/users/{id}(id=${u.id})}">Edit</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <form class="card card-body" th:action="@{/admin/users}" method="post">
+                <h6>Create account</h6>
+                <label class="form-label small mb-0">Role</label>
+                <select class="form-select form-select-sm mb-2" name="role">
+                    <option th:each="r : ${roles}" th:value="${r}" th:text="${r.label}"></option></select>
+                <label class="form-label small mb-0">Name</label><input class="form-control form-control-sm mb-2" name="name" required>
+                <label class="form-label small mb-0">Email</label><input class="form-control form-control-sm mb-2" type="email" name="email" required>
+                <label class="form-label small mb-0">Phone (for SMS alerts)</label><input class="form-control form-control-sm mb-2" name="phone">
+                <label class="form-label small mb-0">Department / job title</label><input class="form-control form-control-sm mb-2" name="detail">
+                <label class="form-label small mb-0">Initial password</label><input class="form-control form-control-sm mb-3" type="password" name="password" required minlength="8">
+                <button class="btn btn-primary btn-sm">Create</button>
+                <div class="form-text">New technicians open their profile next, so you can set skills and workload.</div>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

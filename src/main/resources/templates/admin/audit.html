@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Audit log')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <h3 class="page-title">Audit log</h3>
+    <p class="text-muted">Every action on every incident, recorded automatically by the audit listener. Entries are never edited.</p>
+    <form class="card card-body mb-3" method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2"><label class="form-label small mb-0">Incident</label><input class="form-control form-control-sm" name="incident" th:value="${incident}" placeholder="INC1001"></div>
+            <div class="col-md-3"><label class="form-label small mb-0">Action</label>
+                <select class="form-select form-select-sm" name="action"><option value="">Any</option>
+                    <option th:each="a : ${actions}" th:value="${a}" th:text="${a}" th:selected="${a == action}"></option></select></div>
+            <div class="col-md-3"><label class="form-label small mb-0">User</label><input class="form-control form-control-sm" name="actor" th:value="${actor}" placeholder="name or 'System'"></div>
+            <div class="col-md-2"><label class="form-label small mb-0">From date</label><input type="date" class="form-control form-control-sm" name="from" th:value="${from}"></div>
+            <div class="col-md-2"><button class="btn btn-sm btn-primary">Filter</button> <a class="btn btn-sm btn-link" th:href="@{/admin/audit}">Reset</a></div>
+        </div>
+    </form>
+    <div class="card">
+        <div class="card-header" th:text="${page.totalElements} + ' entries'"></div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead><tr><th class="ps-3">Time</th><th>Incident</th><th>User</th><th>Action</th><th>Previous → new state</th><th>Description</th></tr></thead>
+                <tbody>
+                <tr th:each="a : ${page.content}">
+                    <td class="ps-3 small text-nowrap" th:text="${@fmt.dateTime(a.timestamp)}"></td>
+                    <td><a th:href="@{/incidents/{id}(id=${a.incident.id})}" th:text="${a.incident.number}"></a></td>
+                    <td class="small" th:text="${a.actorName}"></td>
+                    <td><code th:text="${a.action}"></code></td>
+                    <td class="small"><span th:if="${a.fromStatus != null}" th:text="${a.fromStatus}"></span><span th:if="${a.statusChange}"> → </span><span th:if="${a.statusChange}" th:text="${a.toStatus}"></span></td>
+                    <td class="small" th:text="${a.description}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between" th:if="${page.totalPages > 1}">
+            <a class="btn btn-sm btn-outline-secondary" th:classappend="${page.first} ? 'disabled'"
+               th:href="@{/admin/audit(incident=${incident},action=${action},actor=${actor},from=${from},page=${page.number - 1})}">← Newer</a>
+            <span class="small text-muted" th:text="'Page ' + ${page.number + 1} + ' of ' + ${page.totalPages}"></span>
+            <a class="btn btn-sm btn-outline-secondary" th:classappend="${page.last} ? 'disabled'"
+               th:href="@{/admin/audit(incident=${incident},action=${action},actor=${actor},from=${from},page=${page.number + 1})}">Older →</a>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

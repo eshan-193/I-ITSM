@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h3 class="page-title mb-0">Hello, <span th:text="${me.name}">there</span></h3>
+            <div class="text-muted">Report a problem and track it until it is fixed.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" th:href="@{/incidents/quick}"><i class="bi bi-stars"></i> Describe it in your own words</a>
+            <a class="btn btn-primary" th:href="@{/incidents/new}"><i class="bi bi-plus-circle"></i> Report an incident</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card kpi d-flex flex-row justify-content-between">
+            <div><div class="kpi-value" th:text="${openCount}">0</div><div class="kpi-label">Open incidents</div></div>
+            <i class="bi bi-hourglass-split kpi-icon"></i></div></div>
+        <div class="col-md-4"><div class="card kpi d-flex flex-row justify-content-between">
+            <div><div class="kpi-value text-warning" th:text="${#lists.size(needsMe)}">0</div><div class="kpi-label">Waiting for you</div></div>
+            <i class="bi bi-person-exclamation kpi-icon"></i></div></div>
+        <div class="col-md-4"><div class="card kpi d-flex flex-row justify-content-between">
+            <div><div class="kpi-value text-success" th:text="${resolvedCount}">0</div><div class="kpi-label">Resolved</div></div>
+            <i class="bi bi-check2-circle kpi-icon"></i></div></div>
+    </div>
+
+    <div class="alert alert-warning" th:each="i : ${needsMe}">
+        <i class="bi bi-exclamation-circle"></i>
+        <a class="incident-link" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.number}">INC</a>
+        <span th:if="${i.status.name() == 'AWAITING_INFO'}">: the technician needs more information from you.</span>
+        <span th:if="${i.status.name() == 'RESOLVED'}">: a fix was provided. Please confirm it works and rate the service.</span>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">My incidents</div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Incident</th><th>Status</th><th>Priority</th><th>Technician</th><th>Updated</th></tr></thead>
+                        <tbody>
+                        <tr th:each="i : ${incidents}">
+                            <td><a class="incident-link" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.number}">INC</a>
+                                <div class="small text-muted text-truncate" style="max-width: 320px" th:text="${i.title}"></div>
+                                <span class="badge text-bg-light" th:if="${!me.id.equals(i.reporter.id)}">following</span></td>
+                            <td><span th:replace="~{fragments/badges :: status(${i.status})}"></span></td>
+                            <td><span th:replace="~{fragments/badges :: priority(${i.priority})}"></span></td>
+                            <td th:text="${i.assignee != null ? i.assignee.name : 'Being assigned'}"></td>
+                            <td class="small text-muted" th:text="${@fmt.ago(i.updatedAt)}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(incidents)}"><td colspan="5" class="text-center text-muted py-4">No incidents yet. Everything is working!</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-broadcast"></i> Service status</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center" th:each="h : ${serviceHealth}">
+                        <span th:text="${h.service.name}">Service</span>
+                        <span class="badge" th:classappend="'text-bg-' + ${h.status.color}" th:text="${h.status.label}">OK</span>
+                    </li>
+                </ul>
+                <div class="card-footer small text-muted bg-white">Check here first: if a service shows a problem, IT already knows about it.</div>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>document.addEventListener('itsm:changed', () => location.reload());</script>
+</body>
+</html>

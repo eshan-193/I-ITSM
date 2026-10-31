@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${incident.number})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4" th:with="i=${incident}">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+        <div>
+            <div class="text-muted small"><a th:href="@{/incidents}">Incidents</a> / <span th:text="${i.number}"></span></div>
+            <h3 class="page-title mb-1"><span th:text="${i.number}"></span> · <span th:text="${i.title}"></span></h3>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span th:replace="~{fragments/badges :: status(${i.status})}"></span>
+                <span th:replace="~{fragments/badges :: priority(${i.priority})}"></span>
+                <span class="badge text-bg-light border" th:text="${i.service.name}"></span>
+                <span class="badge text-bg-danger" th:if="${i.escalationLevel > 0}"><i class="bi bi-arrow-up-circle"></i> <span th:text="${i.escalationLabel}"></span></span>
+                <span class="badge text-bg-dark" th:if="${i.duplicateOf != null}">Duplicate of <span th:text="${i.duplicateOf.number}"></span></span>
+                <span class="small text-muted">reported <span th:text="${@fmt.ago(i.createdAt)}"></span> by <span th:text="${i.reporter.name}"></span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- ================= Left: details, resolution, conversation, timeline ================= -->
+        <div class="col-lg-8">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p style="white-space: pre-wrap" th:text="${i.description}"></p>
+                    <div class="row small g-2">
+                        <div class="col-sm-6 col-lg-3"><div class="text-muted">Category</div>
+                            <div th:text="${i.category?.name} ?: 'Not classified'"></div>
+                            <div class="text-muted" th:if="${i.classificationSource != null}" style="font-size:.75rem">
+                                <i class="bi bi-stars"></i> <span th:text="${i.classificationSource.label}"></span>
+                                <span th:if="${i.classificationConfidence < 1}" th:text="'(' + ${#numbers.formatDecimal(i.classificationConfidence * 100, 0, 0)} + '%)'"></span></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="text-muted">Impact / urgency</div>
+                            <div th:text="${i.impact} + ' / ' + ${i.urgency}"></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="text-muted">Users affected</div>
+                            <div th:text="${i.affectedUsers}"></div>
+                            <div class="text-muted" style="font-size:.75rem" th:if="${!#sets.isEmpty(i.watchers)}" th:text="${#sets.size(i.watchers)} + ' joined via “me too”'"></div></div>
+                        <div class="col-sm-6 col-lg-3"><div class="text-muted">Technician</div>
+                            <div th:text="${i.assignee?.name} ?: 'Unassigned'"></div></div>
+                    </div>
+                    <div class="small text-muted mt-2" th:if="${i.priorityRationale != null}"><i class="bi bi-calculator"></i> Priority: <span th:text="${i.priorityRationale}"></span></div>
+                </div>
+            </div>
+
+            <div class="card mb-3 border-success" th:if="${i.resolution != null}">
+                <div class="card-header text-success"><i class="bi bi-check2-circle"></i> Resolution</div>
+                <div class="card-body">
+                    <p class="mb-1" style="white-space: pre-wrap" th:text="${i.resolution}"></p>
+                    <div class="small text-muted" th:if="${i.rootCause != null}">Root cause: <span th:text="${i.rootCause}"></span></div>
+                    <div class="small text-muted" th:if="${i.resolvedAt != null}">Resolved <span th:text="${@fmt.dateTime(i.resolvedAt)}"></span></div>
+                    <div class="mt-2" th:if="${i.feedbackRating != null}"><span class="text-warning" th:text="${#strings.repeat('★', i.feedbackRating)} + ${#strings.repeat('☆', 5 - i.feedbackRating)}"></span>
+                        <span class="small" th:text="${i.feedbackComment}"></span></div>
+                    <div class="small text-muted mt-1" th:if="${i.closureNote != null}">Closure: <span th:text="${i.closureNote}"></span> (<span th:text="${@fmt.dateTime(i.closedAt)}"></span>)</div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-chat-left-text"></i> Conversation</div>
+                <div class="card-body">
+                    <div th:each="c : ${comments}" class="comment" th:classappend="${c.type.name()}">
+                        <div class="small d-flex justify-content-between"><span><b th:text="${c.author.name}"></b>
+                            <span class="badge text-bg-light border" th:text="${c.type.label}"></span>
+                            <span class="badge text-bg-warning" th:if="${!c.type.visibleToReporter}">internal</span></span>
+                            <span class="text-muted" th:text="${@fmt.ago(c.createdAt)}"></span></div>
+                        <div style="white-space: pre-wrap" th:text="${c.text}"></div>
+                    </div>
+                    <div class="text-muted small" th:if="${#lists.isEmpty(comments)}">No messages yet.</div>
+                    <form class="mt-3" th:if="${i.isOpen()}" th:action="@{/incidents/{id}/comments(id=${i.id})}" method="post">
+                        <textarea class="form-control mb-2" name="text" rows="2" required placeholder="Add an update or extra information…"></textarea>
+                        <div class="d-flex justify-content-end gap-2">
+                            <select class="form-select form-select-sm w-auto" name="type" th:if="${#lists.size(commentTypes) > 1}">
+                                <option th:each="t : ${commentTypes}" th:value="${t}" th:text="${t.label}"></option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-primary">Post</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="bi bi-clock-history"></i> Audit trail</div>
+                <div class="card-body">
+                    <ul class="timeline">
+                        <li th:each="a : ${i.auditTrail}" th:classappend="${a.statusChange} ? 'status-change' : (${#strings.startsWith(a.action, 'SLA') or a.action == 'ESCALATED'} ? 'sla' : '')">
+                            <div><span class="when" th:text="${@fmt.dateTime(a.timestamp)}"></span> ·
+                                <b th:text="${a.action}"></b> · <span class="small" th:text="${a.actorName}"></span>
+                                <span class="small text-muted" th:if="${a.statusChange}" th:text="'(' + ${a.fromStatus} + ' → ' + ${a.toStatus} + ')'"></span></div>
+                            <div class="small" th:text="${a.description}"></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= Right: SLA + actions + intelligence ================= -->
+        <div class="col-lg-4">
+            <div class="card mb-3" th:if="${i.sla.started}">
+                <div class="card-header d-flex justify-content-between"><span><i class="bi bi-stopwatch"></i> SLA</span>
+                    <span class="badge" th:classappend="'text-bg-' + ${slaStatus.badgeColor}" th:text="${slaStatus.label}"></span></div>
+                <div class="card-body small">
+                    <div class="d-flex justify-content-between"><span>Response due</span>
+                        <span><span th:text="${@fmt.shortDate(i.sla.responseDeadline)}"></span>
+                            <i th:if="${i.sla.respondedAt != null}" class="bi" th:classappend="${i.sla.responseBreached} ? 'bi-x-circle text-danger' : 'bi-check-circle text-success'"></i></span></div>
+                    <div class="d-flex justify-content-between"><span>Resolution due</span>
+                        <span th:text="${@fmt.shortDate(i.sla.resolutionDeadline)} + (${i.isUnresolved()} ? ' (' + ${@fmt.until(i.sla.resolutionDeadline)} + ')' : '')"></span></div>
+                    <div class="progress progress-thin mt-2" th:if="${i.isUnresolved()}">
+                        <div class="progress-bar" th:classappend="${slaUsed >= 100} ? 'bg-danger' : (${slaUsed >= 75} ? 'bg-warning' : 'bg-success')"
+                             th:style="'width:' + ${slaUsed} + '%'"></div></div>
+                    <div class="text-muted mt-1" th:if="${i.sla.paused}"><i class="bi bi-pause-circle"></i> Paused while waiting for the reporter</div>
+                    <div class="mt-2" th:if="${slaRisk != null}">
+                        Predicted risk: <span th:replace="~{fragments/badges :: risk(${slaRisk})}"></span>
+                        <ul class="mb-0 ps-3 text-muted"><li th:each="r : ${slaRisk.reasons}" th:text="${r}"></li></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technician work -->
+            <div class="card mb-3" th:if="${canWork and i.isOpen()}">
+                <div class="card-header"><i class="bi bi-tools"></i> Work on this incident</div>
+                <div class="card-body d-grid gap-2">
+                    <form th:if="${can.contains('ACKNOWLEDGE')}" th:action="@{/incidents/{id}/acknowledge(id=${i.id})}" method="post">
+                        <button class="btn btn-primary w-100"><i class="bi bi-hand-thumbs-up"></i> Acknowledge</button></form>
+                    <form th:if="${can.contains('START_WORK')}" th:action="@{/incidents/{id}/start(id=${i.id})}" method="post">
+                        <button class="btn btn-primary w-100"><i class="bi bi-play-circle"></i> Start investigation</button></form>
+                    <th:block th:if="${can.contains('REQUEST_INFO')}">
+                        <form th:action="@{/incidents/{id}/request-info(id=${i.id})}" method="post">
+                            <textarea class="form-control form-control-sm mb-1" name="question" rows="2" required placeholder="Question for the reporter…"></textarea>
+                            <button class="btn btn-sm btn-outline-info w-100"><i class="bi bi-question-circle"></i> Request information (pauses SLA)</button></form>
+                    </th:block>
+                    <th:block th:if="${can.contains('RESOLVE')}">
+                        <form th:action="@{/incidents/{id}/resolve(id=${i.id})}" method="post" id="resolveForm">
+                            <textarea class="form-control form-control-sm mb-1" name="resolution" id="resolutionText" rows="3" required placeholder="What fixed it?"></textarea>
+                            <input class="form-control form-control-sm mb-1" name="rootCause" placeholder="Root cause (optional)">
+                            <button class="btn btn-success w-100"><i class="bi bi-check2-circle"></i> Resolve</button></form>
+                    </th:block>
+                    <form th:if="${can.contains('CLOSE')}" th:action="@{/incidents/{id}/close(id=${i.id})}" method="post">
+                        <input class="form-control form-control-sm mb-1" name="note" placeholder="Closure note">
+                        <button class="btn btn-dark w-100"><i class="bi bi-archive"></i> Close</button></form>
+                    <div class="small text-muted" th:if="${can.isEmpty() or (can.size() == 1 and can.contains('CLOSE_AS_DUPLICATE'))}">
+                        Waiting for the next step.</div>
+                </div>
+            </div>
+
+            <!-- Reporter actions -->
+            <div class="card mb-3 border-warning" th:if="${isReporter and i.status.name() == 'AWAITING_INFO'}">
+                <div class="card-header"><i class="bi bi-reply"></i> The technician needs more information</div>
+                <form class="card-body" th:action="@{/incidents/{id}/provide-info(id=${i.id})}" method="post">
+                    <textarea class="form-control mb-2" name="information" rows="3" required placeholder="Your answer…"></textarea>
+                    <button class="btn btn-warning w-100">Send answer</button>
+                </form>
+            </div>
+            <div class="card mb-3 border-success" th:if="${isReporter and i.status.name() == 'RESOLVED'}">
+                <div class="card-header"><i class="bi bi-patch-question"></i> Is your problem fixed?</div>
+                <div class="card-body">
+                    <form th:action="@{/incidents/{id}/verify(id=${i.id})}" method="post">
+                        <div class="star-rating mb-2">
+                            <input type="radio" id="r5" name="rating" value="5" required><label for="r5">★</label>
+                            <input type="radio" id="r4" name="rating" value="4"><label for="r4">★</label>
+                            <input type="radio" id="r3" name="rating" value="3"><label for="r3">★</label>
+                            <input type="radio" id="r2" name="rating" value="2"><label for="r2">★</label>
+                            <input type="radio" id="r1" name="rating" value="1"><label for="r1">★</label>
+                        </div>
+                        <input class="form-control form-control-sm mb-2" name="feedback" placeholder="Feedback (optional)">
+                        <button class="btn btn-success w-100">Yes, it's fixed</button>
+                    </form>
+                    <hr>
+                    <form th:action="@{/incidents/{id}/reopen(id=${i.id})}" method="post">
+                        <input class="form-control form-control-sm mb-2" name="reason" required placeholder="What is still wrong?">
+                        <button class="btn btn-outline-danger w-100">No, reopen it</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-3" th:if="${isReporter and !canWork and i.status.name() == 'VERIFIED'}">
+                <form class="card-body" th:action="@{/incidents/{id}/close(id=${i.id})}" method="post">
+                    <button class="btn btn-dark w-100"><i class="bi bi-archive"></i> Close incident</button></form>
+            </div>
+
+            <!-- Assignment (admin / team lead) -->
+            <div class="card mb-3" th:if="${recommendations != null}">
+                <div class="card-header d-flex justify-content-between"><span><i class="bi bi-person-check"></i> Assign technician</span>
+                    <form th:action="@{/incidents/{id}/auto-assign(id=${i.id})}" method="post"><button class="btn btn-sm btn-outline-primary">Auto-assign</button></form></div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item small" th:each="r, st : ${recommendations}" th:if="${st.index < 4}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><b th:text="${r.candidate.technician.name}"></b> <span class="badge text-bg-primary" th:if="${st.first}">Recommended</span></span>
+                            <span class="badge text-bg-light border" th:text="${r.score} + ' pts'"></span></div>
+                        <div class="text-muted" th:text="${r.reason}"></div>
+                        <form th:action="@{/incidents/{id}/assign(id=${i.id})}" method="post" class="mt-1">
+                            <input type="hidden" name="technicianId" th:value="${r.candidate.technician.id}">
+                            <button class="btn btn-sm btn-outline-secondary">Assign</button></form>
+                    </li>
+                    <li class="list-group-item small text-muted" th:if="${#lists.isEmpty(recommendations)}">No technician has spare capacity. Assign manually with override.</li>
+                </ul>
+                <form class="card-body border-top small" th:action="@{/incidents/{id}/assign(id=${i.id})}" method="post">
+                    <div class="input-group input-group-sm mb-1">
+                        <select class="form-select" name="technicianId">
+                            <option th:each="t : ${technicians}" th:value="${t.id}"
+                                    th:text="${t.name} + ' (' + (${workloads[t.id]} ?: 0) + '/' + ${t.maxActiveIncidents} + (${t.available} ? '' : ', unavailable') + ')'"></option>
+                        </select>
+                        <button class="btn btn-outline-secondary">Assign</button>
+                    </div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" name="override" value="true" id="ovr">
+                        <label class="form-check-label" for="ovr">Override workload limit</label></div>
+                </form>
+            </div>
+
+            <!-- Staff triage & intelligence -->
+            <th:block th:if="${staff}">
+                <div class="card mb-3" th:if="${findings != null and (!#lists.isEmpty(findings) or !#lists.isEmpty(duplicates))}">
+                    <div class="card-header"><i class="bi bi-diagram-3"></i> Related incidents</div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item" th:each="f : ${findings}">
+                            <i class="bi" th:classappend="${f.major} ? 'bi-exclamation-octagon text-danger' : 'bi-link-45deg text-primary'"></i>
+                            <span th:text="${f.message}"></span>
+                            <div><a class="me-2" th:each="r : ${f.related}" th:href="@{/incidents/{id}(id=${r.id})}" th:text="${r.number}"></a></div>
+                        </li>
+                        <li class="list-group-item" th:each="d : ${duplicates}">
+                            <i class="bi bi-files text-warning"></i> Possible duplicate
+                            <a th:href="@{/incidents/{id}(id=${d.incident.id})}" th:text="${d.incident.number}"></a>
+                            (<span th:text="${d.similarityPercent}"></span>% similar): <span th:text="${d.incident.title}"></span>
+                            <form th:if="${can.contains('CLOSE_AS_DUPLICATE')}"
+                                  th:action="@{/incidents/{id}/duplicate(id=${i.id})}" method="post" class="mt-1">
+                                <input type="hidden" name="originalNumber" th:value="${d.incident.number}">
+                                <button class="btn btn-sm btn-outline-warning">Close this as duplicate of <span th:text="${d.incident.number}"></span></button></form>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ai-panel p-3 mb-3" th:if="${i.isUnresolved()}">
+                    <div class="ai-title mb-2"><i class="bi bi-lightbulb"></i> Suggested resolutions</div>
+                    <div class="small mb-2" th:each="k : ${knowledge}">
+                        <a th:href="@{/incidents/{id}(id=${k.incident.id})}" th:text="${k.incident.number}"></a>
+                        <span class="text-muted" th:text="'(' + ${k.similarityPercent} + '% similar) ' + ${k.incident.title}"></span>
+                        <div th:text="${k.incident.resolution}"></div>
+                        <button type="button" class="btn btn-link btn-sm p-0 use-fix" th:if="${canWork and can.contains('RESOLVE')}"
+                                th:attr="data-fix=${k.incident.resolution}">Use as resolution</button>
+                    </div>
+                    <div class="small text-muted" th:if="${#lists.isEmpty(knowledge)}">No similar past incidents found.</div>
+                    <button type="button" class="btn btn-sm btn-outline-primary mt-1" id="aiAdviceBtn"><i class="bi bi-stars"></i> Ask AI for troubleshooting steps</button>
+                    <div id="aiAdvice" class="small mt-2"></div>
+                </div>
+
+                <div class="card mb-3" th:if="${i.isUnresolved()}">
+                    <div class="card-header"><i class="bi bi-sliders"></i> Triage</div>
+                    <form class="card-body small" th:action="@{/incidents/{id}/triage(id=${i.id})}" method="post">
+                        <label class="form-label mb-0">Category</label>
+                        <select class="form-select form-select-sm mb-2" name="categoryId">
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}" th:selected="${i.category != null and c.id == i.category.id}"></option></select>
+                        <div class="row g-2 mb-2">
+                            <div class="col"><label class="form-label mb-0">Impact</label>
+                                <select class="form-select form-select-sm" name="impact"><option th:each="x : ${impacts}" th:value="${x}" th:text="${x}" th:selected="${x == i.impact}"></option></select></div>
+                            <div class="col"><label class="form-label mb-0">Urgency</label>
+                                <select class="form-select form-select-sm" name="urgency"><option th:each="x : ${urgencies}" th:value="${x}" th:text="${x}" th:selected="${x == i.urgency}"></option></select></div>
+                            <div class="col"><label class="form-label mb-0">Users</label>
+                                <input class="form-control form-control-sm" type="number" min="1" name="affectedUsers" th:value="${i.affectedUsers}"></div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary w-100">Update and recalculate priority</button>
+                    </form>
+                    <form class="card-body border-top small" th:if="${can.contains('CLOSE_AS_DUPLICATE')}"
+                          th:action="@{/incidents/{id}/duplicate(id=${i.id})}" method="post">
+                        <div class="input-group input-group-sm">
+                            <input class="form-control" name="originalNumber" placeholder="Original incident, e.g. INC1012" required>
+                            <button class="btn btn-outline-warning">Mark duplicate</button></div>
+                    </form>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:inline="javascript">
+    (function () {
+        const incidentId = /*[[${incident.id}]]*/ 0;
+        document.querySelectorAll('.use-fix').forEach(b => b.addEventListener('click', () => {
+            const t = document.getElementById('resolutionText');
+            if (t) { t.value = b.dataset.fix; t.focus(); }
+        }));
+        const btn = document.getElementById('aiAdviceBtn');
+        if (btn) btn.addEventListener('click', () => {
+            const out = document.getElementById('aiAdvice');
+            out.textContent = 'Thinking…';
+            fetch('/api/intelligence/incidents/' + incidentId + '/advice').then(r => r.json()).then(d => {
+                if (!d.available) { out.textContent = d.message; return; }
+                out.innerHTML = '<div><b>Likely cause:</b> ' + itsm.escape(d.likelyCause) + '</div><ol class="ps-3 mb-1">'
+                    + d.steps.map(s => '<li>' + itsm.escape(s) + '</li>').join('') + '</ol><div class="text-muted">' + itsm.escape(d.provider) + '</div>';
+            }).catch(() => out.textContent = 'AI request failed.');
+        });
+        document.addEventListener('itsm:changed', e => {
+            if (e.detail && e.detail.incidentId === incidentId && !document.activeElement.matches('textarea, input')) location.reload();
+        });
+    })();
+</script>
+</body>
+</html>

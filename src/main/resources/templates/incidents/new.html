@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Report incident')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title mb-3">Report an incident</h3>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form class="card card-body" th:action="@{/incidents}" th:object="${form}" method="post" id="reportForm" novalidate>
+                <div class="alert alert-warning" th:if="${#fields.hasGlobalErrors()}">
+                    <div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div>
+                    <div class="form-check mt-2" th:if="${ownDuplicate != null}">
+                        <input class="form-check-input" type="checkbox" th:field="*{confirmedNotDuplicate}" id="confirmDup">
+                        <label class="form-check-label" for="confirmDup">This is a different problem; create it anyway</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Short title</label>
+                    <input class="form-control" th:field="*{title}" th:errorclass="is-invalid" placeholder="e.g. Payment page not loading" maxlength="150">
+                    <div class="invalid-feedback" th:errors="*{title}"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">What is happening?</label>
+                    <textarea class="form-control" rows="5" th:field="*{description}" th:errorclass="is-invalid"
+                              placeholder="What were you doing, what did you expect, what happened instead, any error message?"></textarea>
+                    <div class="invalid-feedback" th:errors="*{description}"></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Affected service</label>
+                        <select class="form-select" th:field="*{serviceId}" th:errorclass="is-invalid">
+                            <option value="">Choose…</option>
+                            <option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{serviceId}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Category <span class="text-muted fw-normal">(optional)</span></label>
+                        <select class="form-select" th:field="*{categoryId}">
+                            <option value="">Let the system decide</option>
+                            <option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Who is affected?</label>
+                        <select class="form-select" th:field="*{impact}">
+                            <option th:each="i : ${impacts}" th:value="${i}" th:text="${i.description}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">How urgent?</label>
+                        <select class="form-select" th:field="*{urgency}">
+                            <option th:each="u : ${urgencies}" th:value="${u}" th:text="${u.description}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Users affected</label>
+                        <input class="form-control" type="number" min="1" th:field="*{affectedUsers}" th:errorclass="is-invalid">
+                        <div class="invalid-feedback" th:errors="*{affectedUsers}"></div>
+                    </div>
+                </div>
+                <div class="mt-4 d-flex justify-content-end gap-2">
+                    <a class="btn btn-link" th:href="@{/}">Cancel</a>
+                    <button class="btn btn-primary"><i class="bi bi-send"></i> Submit incident</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ai-panel p-3 sticky-top" style="top: 1rem">
+                <div class="ai-title mb-2"><i class="bi bi-stars"></i> Live analysis <small class="text-muted fw-normal" id="aiState">start typing…</small></div>
+                <div id="aiPriority" class="mb-3"></div>
+                <div id="aiCategory" class="mb-3"></div>
+                <div id="aiDuplicates" class="mb-3"></div>
+                <div id="aiFixes"></div>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>
+    (function () {
+        const f = document.getElementById('reportForm');
+        const val = name => f.querySelector('[name="' + name + '"]').value;
+        const esc = itsm.escape;
+        let timer;
+
+        function analyse() {
+            const body = {title: val('title'), description: val('description'),
+                serviceId: val('serviceId') || null, impact: val('impact'), urgency: val('urgency'),
+                affectedUsers: parseInt(val('affectedUsers') || '1', 10)};
+            if ((body.title + body.description).trim().length < 4 && !body.serviceId) return;
+            document.getElementById('aiState').textContent = 'analysing…';
+            fetch('/api/intelligence/analyze', {method: 'POST', headers: itsm.csrfHeaders(), body: JSON.stringify(body)})
+                .then(r => r.json()).then(show)
+                .catch(() => document.getElementById('aiState').textContent = 'analysis unavailable');
+        }
+
+        function show(d) {
+            document.getElementById('aiState').textContent = 'updated';
+            const p = d.priority;
+            document.getElementById('aiPriority').innerHTML = p
+                ? '<div class="small text-muted">Predicted priority</div><span class="badge fs-6 text-bg-' + p.color + '">' + p.level + ' – ' + esc(p.label) + '</span>'
+                  + (p.resolutionMinutes ? ' <span class="small">respond within <b>' + p.responseMinutes + ' min</b>, fix within <b>' + fmt(p.resolutionMinutes) + '</b></span>' : '')
+                  + '<div class="small text-muted mt-1">' + esc(p.rationale) + '</div>'
+                : '<div class="small text-muted">Choose a service to see the predicted priority and SLA.</div>';
+
+            const c = d.category;
+            document.getElementById('aiCategory').innerHTML = c
+                ? '<div class="small text-muted">Suggested category</div><b>' + esc(c.name) + '</b> <span class="badge text-bg-light border">' + c.confidence + '% · ' + esc(c.source) + '</span>'
+                  + '<div class="small text-muted">' + esc(c.explanation) + '</div>'
+                  + '<button type="button" class="btn btn-sm btn-outline-primary mt-1" id="useCat">Use this category</button>'
+                : '';
+            if (c) document.getElementById('useCat').onclick = () => { f.querySelector('[name="categoryId"]').value = c.id; };
+
+            const dups = d.duplicates || [];
+            document.getElementById('aiDuplicates').innerHTML = dups.length
+                ? '<div class="small fw-semibold text-warning-emphasis"><i class="bi bi-exclamation-triangle"></i> Someone may have reported this already</div>'
+                  + dups.map(x => '<div class="border rounded p-2 mt-1 bg-white small"><b>' + x.number + '</b> ' + esc(x.title)
+                    + '<div class="text-muted">' + esc(x.service) + ' · ' + esc(x.status) + ' · ' + x.similarity + '% similar</div>'
+                    + '<form method="post" action="/incidents/' + x.id + '/join" class="mt-1">'
+                    + '<input type="hidden" name="' + csrfName() + '" value="' + csrfToken() + '">'
+                    + '<button class="btn btn-sm btn-warning">This affects me too</button></form></div>').join('')
+                : '';
+
+            const fixes = d.knownFixes || [];
+            document.getElementById('aiFixes').innerHTML = fixes.length
+                ? '<div class="small fw-semibold"><i class="bi bi-lightbulb"></i> Fixes that worked for similar problems</div>'
+                  + fixes.map(x => '<div class="small mt-1"><b>' + x.number + '</b> ' + esc(x.title) + '<div class="text-muted">' + esc(x.resolution) + '</div></div>').join('')
+                : '';
+        }
+
+        function fmt(m) { return m < 60 ? m + ' min' : (m / 60) + ' h'; }
+        function csrfToken() { const m = document.querySelector('meta[name="_csrf"]'); return m ? m.content : ''; }
+        function csrfName() { return '_csrf'; }
+
+        f.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(analyse, 600); });
+        f.addEventListener('change', () => { clearTimeout(timer); timer = setTimeout(analyse, 200); });
+        analyse();
+    })();
+</script>
+</body>
+</html>

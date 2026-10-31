@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<th:block th:if="${me != null}"><div th:replace="~{fragments/layout :: nav}"></div></th:block>
+<main class="container py-5" style="max-width: 720px">
+    <div class="card p-5 text-center">
+        <div class="display-4 text-danger mb-2" th:text="${status}">500</div>
+        <h4 th:switch="${status}">
+            <span th:case="403">You are not allowed to do that</span>
+            <span th:case="404">We could not find that</span>
+            <span th:case="409">That action is not possible right now</span>
+            <span th:case="503">A service is temporarily unavailable</span>
+            <span th:case="*">Something went wrong</span>
+        </h4>
+        <p class="text-muted" th:text="${message ?: error}">Unexpected error</p>
+        <a class="btn btn-primary mt-2" th:href="@{/}">Back to home</a>
+    </div>
+</main>
+<th:block th:if="${me != null}"><th:block th:replace="~{fragments/layout :: scripts}"></th:block></th:block>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('SLA policies')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4" style="max-width: 1100px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title">SLA policies</h3>
+    <p class="text-muted">Default targets apply to every service. A service-specific policy overrides the default for that service only.
+        Changes apply to incidents prioritised from now on.</p>
+    <div class="card mb-4">
+        <div class="card-header">Organisation defaults</div>
+        <table class="table mb-0">
+            <thead><tr><th class="ps-3">Priority</th><th>Response target (min)</th><th>Resolution target (min)</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="p : ${defaults}">
+                <form th:action="@{/admin/sla}" method="post" th:id="'def' + ${p.id}"><input type="hidden" name="priority" th:value="${p.priority}"></form>
+                <td class="ps-3"><span th:replace="~{fragments/badges :: priority(${p.priority})}"></span> <span th:text="${p.priority.label}"></span></td>
+                <td><input class="form-control form-control-sm w-50" type="number" min="1" name="responseMinutes" th:value="${p.responseMinutes}" th:attr="form='def' + ${p.id}"></td>
+                <td><input class="form-control form-control-sm w-50" type="number" min="1" name="resolutionMinutes" th:value="${p.resolutionMinutes}" th:attr="form='def' + ${p.id}"></td>
+                <td><button class="btn btn-sm btn-outline-primary" th:attr="form='def' + ${p.id}">Save</button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header">Service-specific overrides</div>
+                <table class="table mb-0">
+                    <thead><tr><th class="ps-3">Service</th><th>Priority</th><th>Response</th><th>Resolution</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="p : ${overrides}">
+                        <td class="ps-3" th:text="${p.service.name}"></td>
+                        <td><span th:replace="~{fragments/badges :: priority(${p.priority})}"></span></td>
+                        <td th:text="${p.responseMinutes} + ' min'"></td>
+                        <td th:text="${@fmt.minutes(p.resolutionMinutes)}"></td>
+                        <td><form th:action="@{/admin/sla/{id}/delete(id=${p.id})}" method="post"><button class="btn btn-sm btn-link text-danger">Remove</button></form></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(overrides)}"><td colspan="5" class="text-muted text-center">No overrides.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <form class="card card-body" th:action="@{/admin/sla}" method="post">
+                <h6>Add or update an override</h6>
+                <label class="form-label small mb-0">Service</label>
+                <select class="form-select form-select-sm mb-2" name="serviceId" required><option th:each="s : ${services}" th:value="${s.id}" th:text="${s.name}"></option></select>
+                <label class="form-label small mb-0">Priority</label>
+                <select class="form-select form-select-sm mb-2" name="priority"><option th:each="p : ${priorities}" th:value="${p}" th:text="${p.displayName}"></option></select>
+                <div class="row g-2 mb-3">
+                    <div class="col"><label class="form-label small mb-0">Response (min)</label><input class="form-control form-control-sm" type="number" min="1" name="responseMinutes" required></div>
+                    <div class="col"><label class="form-label small mb-0">Resolution (min)</label><input class="form-control form-control-sm" type="number" min="1" name="resolutionMinutes" required></div>
+                </div>
+                <button class="btn btn-primary btn-sm">Save override</button>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

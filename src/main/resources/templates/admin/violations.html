@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('SLA violations')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <h3 class="page-title">SLA violations</h3>
+    <p class="text-muted">Recorded by the background SLA monitor, which checks every open incident every 30 seconds.</p>
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3" th:each="r : ${byPriority}">
+            <div class="card kpi">
+                <div class="kpi-label"><span th:text="${r.priority}"></span> compliance (<span th:text="${r.count}"></span> resolved)</div>
+                <div class="kpi-value" th:classappend="${r.compliancePercent < 80} ? 'text-danger' : 'text-success'" th:text="${r.compliancePercent} + '%'"></div>
+                <div class="small text-muted">avg fix <span th:text="${@fmt.minutes(r.avgResolutionMinutes)}"></span></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <table class="table mb-0">
+            <thead><tr><th class="ps-3">Detected</th><th>Incident</th><th>Type</th><th>Priority</th><th>Technician</th><th>Deadline was</th></tr></thead>
+            <tbody>
+            <tr th:each="v : ${violations}">
+                <td class="ps-3 small" th:text="${@fmt.dateTime(v.detectedAt)}"></td>
+                <td><a class="incident-link" th:href="@{/incidents/{id}(id=${v.incident.id})}" th:text="${v.incident.number}"></a>
+                    <span class="small text-muted" th:text="${v.incident.title}"></span></td>
+                <td><span class="badge text-bg-danger" th:text="${v.breachType.label}"></span></td>
+                <td><span th:replace="~{fragments/badges :: priority(${v.priority})}"></span></td>
+                <td th:text="${v.technician?.name} ?: 'Unassigned'"></td>
+                <td class="small" th:text="${@fmt.dateTime(v.deadline)}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(violations)}"><td colspan="6" class="text-center text-muted py-4">No SLA violations. 🎉</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

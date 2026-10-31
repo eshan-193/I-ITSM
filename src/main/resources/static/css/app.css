@@ -1,0 +1,56 @@
+/* I-ITSM: each role gets its own accent colour so users always know which "hat" they are wearing. */
+:root {
+    --itsm-employee: #2563eb;
+    --itsm-technician: #0f766e;
+    --itsm-admin: #4338ca;
+    --itsm-bg: #f4f6fb;
+}
+
+body { background: var(--itsm-bg); font-size: .95rem; }
+.app-nav { box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.app-nav.theme-employee { background: linear-gradient(90deg, #1d4ed8, var(--itsm-employee)); }
+.app-nav.theme-technician { background: linear-gradient(90deg, #115e59, var(--itsm-technician)); }
+.app-nav.theme-admin { background: linear-gradient(90deg, #312e81, var(--itsm-admin)); }
+.role-pill { background: rgba(255,255,255,.18); font-weight: 500; }
+
+.page-title { font-weight: 700; letter-spacing: -.01em; }
+.card { border: 0; box-shadow: 0 1px 3px rgba(15,23,42,.08); border-radius: .75rem; }
+.card-header { background: #fff; border-bottom: 1px solid #eef0f4; font-weight: 600; border-radius: .75rem .75rem 0 0 !important; }
+
+.kpi { padding: 1rem 1.25rem; }
+.kpi .kpi-value { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+.kpi .kpi-label { color: #64748b; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+.kpi .kpi-icon { font-size: 1.6rem; opacity: .35; }
+
+.table thead th { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: #64748b; font-weight: 600; }
+.table td { vertical-align: middle; }
+a.incident-link { font-weight: 600; text-decoration: none; }
+.text-truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.timeline { list-style: none; padding-left: 0; margin: 0; position: relative; }
+.timeline:before { content: ""; position: absolute; left: 9px; top: 4px; bottom: 4px; width: 2px; background: #e2e8f0; }
+.timeline li { position: relative; padding: 0 0 .9rem 1.9rem; }
+.timeline li:before { content: ""; position: absolute; left: 3px; top: 5px; width: 14px; height: 14px; border-radius: 50%;
+    background: #fff; border: 3px solid #94a3b8; }
+.timeline li.status-change:before { border-color: var(--itsm-admin); }
+.timeline li.sla:before { border-color: #dc2626; }
+.timeline .when { color: #64748b; font-size: .8rem; }
+
+.comment { border-left: 3px solid #cbd5e1; padding: .5rem .75rem; margin-bottom: .75rem; background: #fff; border-radius: .25rem; }
+.comment.INVESTIGATION_NOTE { border-color: #f59e0b; background: #fffbeb; }
+.comment.INFO_REQUEST { border-color: #0ea5e9; background: #f0f9ff; }
+.comment.INFO_RESPONSE { border-color: #22c55e; background: #f0fdf4; }
+
+.ai-panel { border: 1px dashed #a5b4fc; background: #f5f7ff; border-radius: .75rem; }
+.ai-panel .ai-title { color: var(--itsm-admin); font-weight: 600; }
+.health-dot { width: .7rem; height: .7rem; border-radius: 50%; display: inline-block; }
+.progress-thin { height: .5rem; }
+.star-rating input { display: none; }
+.star-rating label { font-size: 1.6rem; color: #cbd5e1; cursor: pointer; }
+.star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f59e0b; }
+.star-rating { display: inline-flex; flex-direction: row-reverse; }
+
+.login-hero { min-height: 100vh; background: linear-gradient(135deg, #312e81 0%, #2563eb 55%, #0f766e 100%); }
+.login-card { max-width: 440px; }
+.demo-accounts code { cursor: pointer; }
+#graph { height: 620px; background: #fff; border-radius: .75rem; }

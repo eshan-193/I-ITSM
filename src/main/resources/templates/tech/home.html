@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My queue')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h3 class="page-title mb-0">My queue</h3>
+            <div class="text-muted">Sorted by predicted SLA risk: work from the top.</div>
+        </div>
+        <form th:action="@{/tech/availability}" method="post" class="d-flex align-items-center gap-2">
+            <span class="badge" th:classappend="${technician.available} ? 'text-bg-success' : 'text-bg-secondary'"
+                  th:text="${technician.available} ? 'Available' : 'Unavailable'"></span>
+            <input type="hidden" name="available" th:value="${!technician.available}">
+            <button class="btn btn-sm btn-outline-secondary" th:text="${technician.available} ? 'Go off shift' : 'Go on shift'"></button>
+        </form>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="card kpi">
+            <div class="kpi-label">Workload</div>
+            <div class="kpi-value"><span th:text="${workload}">0</span><small class="text-muted fs-6"> / <span th:text="${technician.maxActiveIncidents}">5</span></small></div>
+            <div class="progress progress-thin mt-2"><div class="progress-bar"
+                 th:classappend="${workload >= technician.maxActiveIncidents} ? 'bg-danger' : (${workload * 100 / technician.maxActiveIncidents >= 80} ? 'bg-warning' : 'bg-success')"
+                 th:style="'width:' + ${workload * 100 / technician.maxActiveIncidents} + '%'"></div></div>
+        </div></div>
+        <div class="col-md-3"><div class="card kpi">
+            <div class="kpi-label">Awaiting acknowledgement</div>
+            <div class="kpi-value text-primary" th:text="${#lists.size(queue.?[status.name() == 'ASSIGNED'])}">0</div></div></div>
+        <div class="col-md-3"><div class="card kpi">
+            <div class="kpi-label">High SLA risk</div>
+            <div class="kpi-value text-danger" th:text="${highRiskCount}">0</div></div></div>
+        <div class="col-md-3"><div class="card kpi">
+            <div class="kpi-label">Skills</div>
+            <div class="mt-1"><span class="badge text-bg-light border me-1" th:each="s : ${technician.skills}" th:text="${s.name}"></span></div></div></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">Assigned to me</div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Incident</th><th>Service</th><th>Priority</th><th>Status</th><th>SLA</th><th>Risk</th><th>Resolution due</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="i : ${queue}">
+                    <td><a class="incident-link" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.number}"></a>
+                        <div class="small text-muted text-truncate" style="max-width: 340px" th:text="${i.title}"></div>
+                        <span class="badge text-bg-danger" th:if="${i.escalationLevel > 0}" th:text="${i.escalationLabel}"></span></td>
+                    <td th:text="${i.service.name}"></td>
+                    <td><span th:replace="~{fragments/badges :: priority(${i.priority})}"></span></td>
+                    <td><span th:replace="~{fragments/badges :: status(${i.status})}"></span></td>
+                    <td><span th:replace="~{fragments/badges :: sla(${i})}"></span></td>
+                    <td><span th:replace="~{fragments/badges :: risk(${risk[i.id]})}"></span></td>
+                    <td class="small" th:text="${@fmt.until(i.sla.resolutionDeadline)}"></td>
+                    <td class="text-end">
+                        <form th:if="${i.status.name() == 'ASSIGNED'}" th:action="@{/incidents/{id}/acknowledge(id=${i.id})}" method="post" class="d-inline">
+                            <button class="btn btn-sm btn-primary">Acknowledge</button></form>
+                        <a th:unless="${i.status.name() == 'ASSIGNED'}" class="btn btn-sm btn-outline-secondary" th:href="@{/incidents/{id}(id=${i.id})}">Open</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(queue)}"><td colspan="8" class="text-center text-muted py-4">Your queue is empty. 🎉</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6" th:if="${unassigned != null}">
+            <div class="card">
+                <div class="card-header"><i class="bi bi-person-badge"></i> Team lead: unassigned incidents</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="i : ${unassigned}">
+                        <span><a class="incident-link" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.number}"></a>
+                            <span class="text-muted" th:text="${i.title}"></span></span>
+                        <span th:replace="~{fragments/badges :: priority(${i.priority})}"></span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${#lists.isEmpty(unassigned)}">Nothing waiting for assignment.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">Recently resolved by me</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="i : ${resolvedByMe}">
+                        <span><a class="incident-link" th:href="@{/incidents/{id}(id=${i.id})}" th:text="${i.number}"></a>
+                            <span class="text-muted" th:text="${i.title}"></span></span>
+                        <span class="text-warning" th:if="${i.feedbackRating != null}" th:text="${#strings.repeat('★', i.feedbackRating)}"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script>document.addEventListener('itsm:changed', () => location.reload());</script>
+</body>
+</html>

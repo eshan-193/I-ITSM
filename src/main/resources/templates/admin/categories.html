@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Categories')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title">Incident categories</h3>
+    <p class="text-muted">Categories are data, not code: add one here and it is immediately used by the classifier, search and reports.
+        Keywords help automatic categorisation; the classifier also learns from past incidents.</p>
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="card">
+                <table class="table mb-0">
+                    <thead><tr><th class="ps-3">Code</th><th>Name / description / keywords</th><th>Active</th><th></th></tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${categories}">
+                        <form th:action="@{/admin/categories/{id}(id=${c.id})}" method="post" th:id="'cat' + ${c.id}"></form>
+                        <td class="ps-3"><code th:text="${c.code}"></code></td>
+                        <td>
+                            <input class="form-control form-control-sm mb-1 fw-semibold" name="name" th:value="${c.name}" th:attr="form='cat' + ${c.id}" required>
+                            <input class="form-control form-control-sm mb-1" name="description" th:value="${c.description}" th:attr="form='cat' + ${c.id}" placeholder="Description">
+                            <input class="form-control form-control-sm" name="keywords" th:value="${c.keywords}" th:attr="form='cat' + ${c.id}" placeholder="comma, separated, keywords">
+                        </td>
+                        <td><input class="form-check-input" type="checkbox" name="active" value="true" th:checked="${c.active}" th:attr="form='cat' + ${c.id}"></td>
+                        <td><button class="btn btn-sm btn-outline-primary" th:attr="form='cat' + ${c.id}">Save</button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <form class="card card-body" th:action="@{/admin/categories}" method="post">
+                <h6>New category</h6>
+                <label class="form-label small mb-0">Code</label><input class="form-control form-control-sm mb-2" name="code" required pattern="[A-Za-z_]{2,40}" placeholder="e.g. TELEPHONY">
+                <label class="form-label small mb-0">Name</label><input class="form-control form-control-sm mb-2" name="name" required>
+                <label class="form-label small mb-0">Description</label><input class="form-control form-control-sm mb-2" name="description">
+                <label class="form-label small mb-0">Keywords</label><input class="form-control form-control-sm mb-3" name="keywords" placeholder="phone, voip, extension, call">
+                <button class="btn btn-primary btn-sm">Create category</button>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

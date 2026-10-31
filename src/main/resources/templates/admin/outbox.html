@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Outbox')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container-fluid px-4 py-4">
+    <h3 class="page-title">Email &amp; SMS outbox</h3>
+    <p class="text-muted">Every email and SMS the notification system produced. <b>SIMULATED</b> means no real gateway is configured;
+        set the SMTP environment variables to send real email.</p>
+    <div class="card">
+        <table class="table table-sm mb-0">
+            <thead><tr><th class="ps-3">Time</th><th>Channel</th><th>To</th><th>Subject / message</th><th>Status</th></tr></thead>
+            <tbody>
+            <tr th:each="m : ${messages}">
+                <td class="ps-3 small text-nowrap" th:text="${@fmt.dateTime(m.createdAt)}"></td>
+                <td><i class="bi" th:classappend="'bi-' + ${m.channel.icon}"></i> <span th:text="${m.channel.label}"></span></td>
+                <td class="small" th:text="${m.recipientAddress}"></td>
+                <td class="small"><b th:text="${m.subject}"></b>
+                    <details><summary class="text-muted">message</summary><pre class="small mb-0" style="white-space: pre-wrap" th:text="${m.body}"></pre></details></td>
+                <td><span class="badge" th:classappend="${m.status.name() == 'SENT'} ? 'text-bg-success' : (${m.status.name() == 'FAILED'} ? 'text-bg-danger' : 'text-bg-secondary')"
+                          th:text="${m.status}" th:title="${m.errorMessage}"></span></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(messages)}"><td colspan="5" class="text-center text-muted py-4">Nothing sent yet.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

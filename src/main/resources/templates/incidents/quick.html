@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('AI quick report')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4" style="max-width: 760px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title"><i class="bi bi-stars text-primary"></i> Describe the problem in your own words</h3>
+    <p class="text-muted">No forms to fill in: just write what is happening, like you would to a colleague. The system works out the
+        service, category, impact and urgency, and you review them before submitting.</p>
+    <form class="card card-body ai-panel" th:action="@{/incidents/quick}" method="post">
+        <textarea class="form-control mb-3" name="text" rows="6" required minlength="10"
+                  placeholder="e.g. The payment site has been down for 20 minutes, nobody in finance can bill customers and it's urgent!"></textarea>
+        <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted" th:text="${aiAvailable} ? 'Powered by Google Gemini' : 'Using built-in text analysis (AI key not configured)'"></small>
+            <button class="btn btn-primary"><i class="bi bi-magic"></i> Analyse and pre-fill</button>
+        </div>
+    </form>
+    <div class="mt-3 small text-muted">Try: <em>"VPN keeps disconnecting for the whole sales team, we can't work from home"</em></div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Settings')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4" style="max-width: 980px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h3 class="page-title">Strategies &amp; settings</h3>
+    <p class="text-muted">These take effect immediately, with no restart. Each strategy is a separate class behind a common interface (Strategy pattern).</p>
+    <form th:action="@{/admin/settings}" method="post">
+        <div class="card mb-3">
+            <div class="card-header">Technician assignment strategy</div>
+            <div class="card-body">
+                <div class="form-check mb-2" th:each="s : ${strategies}">
+                    <input class="form-check-input" type="radio" name="ASSIGNMENT_STRATEGY" th:value="${s.key()}" th:id="'as' + ${s.key()}"
+                           th:checked="${settings['ASSIGNMENT_STRATEGY'] == s.key()}">
+                    <label class="form-check-label" th:for="'as' + ${s.key()}"><b th:text="${s.displayName()}"></b>
+                        <div class="small text-muted" th:text="${s.description()}"></div></label>
+                </div>
+                <div class="form-check form-switch mt-3">
+                    <input class="form-check-input" type="checkbox" name="AUTO_ASSIGN" value="true" id="autoAssign"
+                           th:checked="${settings['AUTO_ASSIGN'] == 'true'}">
+                    <label class="form-check-label" for="autoAssign">Assign automatically when an incident is reported</label></div>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">Priority algorithm</div>
+            <div class="card-body">
+                <div class="form-check mb-2" th:each="c : ${calculators}">
+                    <input class="form-check-input" type="radio" name="PRIORITY_CALCULATOR" th:value="${c.key()}" th:id="'pc' + ${c.key()}"
+                           th:checked="${settings['PRIORITY_CALCULATOR'] == c.key()}">
+                    <label class="form-check-label" th:for="'pc' + ${c.key()}"><b th:text="${c.displayName()}"></b>
+                        <div class="small text-muted" th:text="${c.description()}"></div></label>
+                </div>
+            </div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header">SLA, escalation &amp; intelligence</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6"><label class="form-label small mb-0">SLA warning threshold (% of resolution time)</label>
+                    <input class="form-control form-control-sm" type="number" min="10" max="95" name="SLA_WARNING_PERCENT" th:value="${settings['SLA_WARNING_PERCENT']}"></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Duplicate similarity threshold (0–1)</label>
+                    <input class="form-control form-control-sm" type="number" step="0.05" min="0.05" max="0.95" name="DUPLICATE_THRESHOLD" th:value="${settings['DUPLICATE_THRESHOLD']}"></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Outage cluster size (incidents on one service)</label>
+                    <input class="form-control form-control-sm" type="number" min="2" max="20" name="CLUSTER_SIZE" th:value="${settings['CLUSTER_SIZE']}"></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Outage cluster window (minutes)</label>
+                    <input class="form-control form-control-sm" type="number" min="5" max="1440" name="CLUSTER_WINDOW_MINUTES" th:value="${settings['CLUSTER_WINDOW_MINUTES']}"></div>
+                <div class="col-md-6"><div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="ESCALATION_ENABLED" value="true" id="esc" th:checked="${settings['ESCALATION_ENABLED'] == 'true'}">
+                    <label class="form-check-label" for="esc">Auto-escalate unacknowledged P1/P2 (Technician → Team Lead → IT Manager)</label></div></div>
+                <div class="col-md-6"><div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="AI_ENABLED" value="true" id="ai" th:checked="${settings['AI_ENABLED'] == 'true'}">
+                    <label class="form-check-label" for="ai">Use Gemini AI when an API key is configured</label></div></div>
+            </div>
+        </div>
+        <button class="btn btn-primary">Save settings</button>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
