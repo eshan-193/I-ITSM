@@ -59,8 +59,14 @@ public class LiveUpdateHub {
         try {
             emitter.send(SseEmitter.event().name(name).data(payload));
         } catch (IOException | IllegalStateException e) {
+            // the browser tab has gone; forget the connection so one dead tab never breaks a request
             log.debug("Dropping closed SSE connection: {}", e.getMessage());
-            emitter.complete();
+            emittersByUser.values().forEach(list -> list.remove(emitter));
+            try {
+                emitter.complete();
+            } catch (IllegalStateException alreadyFailed) {
+                // the container has already closed it
+            }
         }
     }
 }
