@@ -40,3 +40,6 @@ data/
 .recommenders/
 RemoteSystemsTempFiles/
 .DS_Store
+
+### Generated
+docs/report/report.html
