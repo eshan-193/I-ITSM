@@ -67,18 +67,19 @@
 </main>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>Chart.defaults.font.family = 'Inter, system-ui, sans-serif'; Chart.defaults.color = '#71717a'; Chart.defaults.borderColor = '#f0f0f2'; Chart.defaults.plugins.legend.labels.boxWidth = 10;</script>
 <script th:inline="javascript">
     const byCategory = /*[[${byCategory}]]*/ {};
     const byStatus = /*[[${byStatus}]]*/ {};
     const trend = /*[[${trend}]]*/ {labels: [], created: [], resolved: []};
-    const palette = ['#4338ca', '#0f766e', '#2563eb', '#f59e0b', '#dc2626', '#7c3aed', '#16a34a', '#0891b2', '#db2777', '#64748b'];
+    const palette = ['#3451d1', '#6b83e6', '#9fb0f0', '#0f766e', '#5eaaa1', '#a1a1aa', '#d4d4d8', '#f59e0b', '#dc2626', '#71717a'];
     new Chart(document.getElementById('catChart'), {type: 'bar', data: {labels: Object.keys(byCategory),
         datasets: [{label: 'Incidents', data: Object.values(byCategory), backgroundColor: palette}]},
         options: {indexAxis: 'y', plugins: {legend: {display: false}}, scales: {x: {ticks: {precision: 0}}}}});
     new Chart(document.getElementById('statusChart'), {type: 'doughnut', data: {labels: Object.keys(byStatus),
         datasets: [{data: Object.values(byStatus), backgroundColor: palette}]}, options: {plugins: {legend: {position: 'right'}}}});
     new Chart(document.getElementById('trendChart'), {type: 'bar', data: {labels: trend.labels, datasets: [
-        {label: 'Created', data: trend.created, backgroundColor: '#4338ca'}, {label: 'Resolved', data: trend.resolved, backgroundColor: '#16a34a'}]},
+        {label: 'Created', data: trend.created, backgroundColor: '#3451d1'}, {label: 'Resolved', data: trend.resolved, backgroundColor: '#16a34a'}]},
         options: {scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
 </script>
 </body>

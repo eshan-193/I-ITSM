@@ -96,9 +96,10 @@
 </main>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>Chart.defaults.font.family = 'Inter, system-ui, sans-serif'; Chart.defaults.color = '#71717a'; Chart.defaults.borderColor = '#f0f0f2'; Chart.defaults.plugins.legend.labels.boxWidth = 10;</script>
 <script>
     (function () {
-        const colors = {P1: '#dc3545', P2: '#ffc107', P3: '#0dcaf0', P4: '#6c757d'};
+        const colors = {P1: '#dc2626', P2: '#f59e0b', P3: '#38bdf8', P4: '#a1a1aa'};
         let trend, priority, workload;
 
         function minutes(m) {
@@ -119,8 +120,8 @@
             const t = d.trend;
             if (!trend) {
                 trend = new Chart(document.getElementById('trendChart'), {type: 'line', data: {labels: t.labels, datasets: [
-                    {label: 'Created', data: t.created, borderColor: '#4338ca', backgroundColor: 'rgba(67,56,202,.1)', fill: true, tension: .3},
-                    {label: 'Resolved', data: t.resolved, borderColor: '#16a34a', tension: .3}]},
+                    {label: 'Created', data: t.created, borderColor: '#3451d1', backgroundColor: 'rgba(52,81,209,.08)', fill: true, tension: .2, pointRadius: 2, borderWidth: 2},
+                    {label: 'Resolved', data: t.resolved, borderColor: '#16a34a', tension: .2, pointRadius: 2, borderWidth: 2}]},
                     options: {plugins: {legend: {position: 'bottom'}}, scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
             } else { trend.data.datasets[0].data = t.created; trend.data.datasets[1].data = t.resolved; trend.update(); }
 
@@ -134,8 +135,8 @@
             const w = d.workload;
             if (!workload) {
                 workload = new Chart(document.getElementById('workloadChart'), {type: 'bar', data: {labels: w.map(x => x.name),
-                    datasets: [{label: 'Active', data: w.map(x => x.active), backgroundColor: '#0f766e'},
-                               {label: 'Capacity', data: w.map(x => x.max - x.active), backgroundColor: '#e2e8f0'}]},
+                    datasets: [{label: 'Active', data: w.map(x => x.active), backgroundColor: '#3451d1'},
+                               {label: 'Capacity', data: w.map(x => x.max - x.active), backgroundColor: '#e4e4e7'}]},
                     options: {indexAxis: 'y', plugins: {legend: {position: 'bottom'}}, scales: {x: {stacked: true, ticks: {precision: 0}}, y: {stacked: true}}}});
             } else {
                 workload.data.labels = w.map(x => x.name);
