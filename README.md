@@ -16,7 +16,7 @@ with SLA monitoring, notifications, audit, analytics, and AI-assisted features.
 | UI | Thymeleaf + Bootstrap 5 + Chart.js + vis-network (server-rendered, live updates via Server-Sent Events) |
 | Database | PostgreSQL 17 (schema managed by Flyway); H2 for tests and a zero-install fallback |
 | AI | Google Gemini API (optional) with an offline TF-IDF fallback |
-| Tests | JUnit 5, AssertJ, Spring Boot Test, MockMvc: **64 automated tests** |
+| Tests | JUnit 5, AssertJ, Spring Boot Test, MockMvc: **67 automated tests** |
 | API | REST + OpenAPI/Swagger UI at `/swagger-ui.html` |
 
 ---

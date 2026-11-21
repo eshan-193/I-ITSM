@@ -4,7 +4,7 @@ All test cases are automated and run with `./mvnw test` (unit tests need no data
 tests start the full Spring application on an in-memory H2 database with the demo data). Each test's
 `@DisplayName` starts with its ID, so the IDs below match the test report.
 
-**Result of the last run: 64 tests executed (49 documented cases, some parameterised), 0 failures.**
+**Result of the last run: 67 tests executed (49 documented cases, some parameterised), 0 failures.**
 
 Coverage by required category: normal operations, boundary conditions, invalid inputs, exceptions,
 authorization, business rules, plus intelligent features and background processing.
