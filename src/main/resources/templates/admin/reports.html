@@ -18,7 +18,7 @@
             <div class="col"><div class="kpi-value text-success" th:text="${overview.resolved}"></div><div class="kpi-label">Resolved</div></div>
             <div class="col"><div class="kpi-value text-danger" th:text="${overview.slaBreached}"></div><div class="kpi-label">SLA violations</div></div>
             <div class="col"><div class="kpi-value" th:text="${@fmt.minutes(overview.mttrMinutes)}"></div><div class="kpi-label">Mean time to resolve</div></div>
-            <div class="col"><div class="kpi-value text-warning" th:text="${overview.averageRating} + '★'"></div><div class="kpi-label">Satisfaction</div></div>
+            <div class="col"><div class="kpi-value text-warning" th:text="${overview.averageRating} + ' / 5'"></div><div class="kpi-label">Satisfaction</div></div>
         </div>
     </div>
 
@@ -36,7 +36,7 @@
                         <td th:text="${w.resolved}"></td>
                         <td th:text="${@fmt.minutes(w.avgResolutionMinutes)}"></td>
                         <td th:text="${w.breaches}" th:classappend="${w.breaches > 0} ? 'text-danger'"></td>
-                        <td class="text-warning" th:text="${w.avgRating > 0} ? ${w.avgRating} + '★' : '—'"></td>
+                        <td class="text-warning" th:text="${w.avgRating > 0} ? ${w.avgRating} + ' / 5' : '—'"></td>
                     </tr>
                     </tbody>
                 </table>

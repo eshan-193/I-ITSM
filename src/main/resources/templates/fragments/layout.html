@@ -17,8 +17,7 @@
 
 <nav th:fragment="nav" class="navbar navbar-expand-lg navbar-light app-nav" th:classappend="'theme-' + ${roleTheme}">
     <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" th:href="@{/}"><i class="bi bi-shield-check me-1"></i>I-ITSM</a>
-        <span class="badge role-pill me-3" th:text="${me.role.label}">Role</span>
+        <a class="navbar-brand fw-bold me-4" th:href="@{/}"><i class="bi bi-shield-check me-1"></i>I-ITSM</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
             <span class="navbar-toggler-icon"></span>
         </button>

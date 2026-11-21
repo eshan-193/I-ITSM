@@ -28,7 +28,7 @@
                 <td th:text="${v.technician?.name} ?: 'Unassigned'"></td>
                 <td class="small" th:text="${@fmt.dateTime(v.deadline)}"></td>
             </tr>
-            <tr th:if="${#lists.isEmpty(violations)}"><td colspan="6" class="text-center text-muted py-4">No SLA violations. 🎉</td></tr>
+            <tr th:if="${#lists.isEmpty(violations)}"><td colspan="6" class="text-center text-muted py-4">No SLA violations recorded.</td></tr>
             </tbody>
         </table>
     </div>

@@ -26,7 +26,7 @@
         <div class="col-6 col-lg-3"><div class="card kpi"><div class="kpi-label">Mean time to acknowledge</div><div class="kpi-value fs-4" id="k-mtta" th:text="${@fmt.minutes(overview.mttaMinutes)}"></div></div></div>
         <div class="col-6 col-lg-3"><div class="card kpi"><div class="kpi-label">Mean time to resolve</div><div class="kpi-value fs-4" id="k-mttr" th:text="${@fmt.minutes(overview.mttrMinutes)}"></div></div></div>
         <div class="col-6 col-lg-3"><div class="card kpi"><div class="kpi-label">Unassigned open</div><div class="kpi-value fs-4 text-warning" id="k-unassigned" th:text="${overview.unassigned}"></div></div></div>
-        <div class="col-6 col-lg-3"><div class="card kpi"><div class="kpi-label">Customer satisfaction</div><div class="kpi-value fs-4 text-warning" id="k-rating" th:text="${overview.averageRating} + ' ★'"></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card kpi"><div class="kpi-label">Customer satisfaction</div><div class="kpi-value fs-4 text-warning" id="k-rating" th:text="${overview.averageRating} + ' / 5'"></div></div></div>
     </div>
 
     <div class="row g-3 mb-3">
@@ -38,8 +38,7 @@
     <div class="row g-3">
         <div class="col-lg-5">
             <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between"><span><i class="bi bi-graph-up-arrow text-danger"></i> Predicted SLA risk</span>
-                    <span class="small text-muted">AI risk model</span></div>
+                <div class="card-header d-flex justify-content-between"><span><i class="bi bi-graph-up-arrow text-danger"></i> Predicted SLA risk</span></div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item" th:each="i : ${atRisk}">
                         <div class="d-flex justify-content-between">
@@ -115,7 +114,7 @@
             set('k-total', o.total); set('k-open', o.open); set('k-critical', o.criticalOpen);
             set('k-resolved', o.resolved); set('k-breached', o.slaBreached); set('k-compliance', o.slaCompliancePercent + '%');
             set('k-mtta', minutes(o.mttaMinutes)); set('k-mttr', minutes(o.mttrMinutes));
-            set('k-unassigned', o.unassigned); set('k-rating', o.averageRating + ' ★');
+            set('k-unassigned', o.unassigned); set('k-rating', o.averageRating + ' / 5');
 
             const t = d.trend;
             if (!trend) {
