@@ -164,7 +164,7 @@ public class IncidentController {
         form.setUrgency(draft.urgency());
         form.setAffectedUsers(draft.affectedUsers());
         redirect.addFlashAttribute("form", form);
-        redirect.addFlashAttribute("info", "Form pre-filled by " + draft.source() + ". Please check it before submitting.");
+        redirect.addFlashAttribute("info", "Form pre-filled from your description. Please check it before submitting.");
         return "redirect:/incidents/new";
     }
 

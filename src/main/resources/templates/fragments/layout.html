@@ -65,7 +65,7 @@
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 <li class="nav-item me-2">
                     <span class="badge rounded-pill ai-chip" th:classappend="${aiAvailable} ? 'on'"
-                          th:title="${aiAvailable} ? 'Gemini AI connected' : 'AI offline: using built-in TF-IDF classifier'">
+                          th:title="${aiAvailable} ? 'AI assistance is on' : 'AI assistance is off; built-in text analysis is used'">
                         <i class="bi bi-stars"></i> <span th:text="${aiAvailable} ? 'AI on' : 'AI offline mode'"></span>
                     </span>
                 </li>

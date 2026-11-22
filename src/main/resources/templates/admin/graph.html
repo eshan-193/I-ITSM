@@ -5,8 +5,8 @@
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <main class="container-fluid px-4 py-4">
     <h3 class="page-title">Service dependency map</h3>
-    <p class="text-muted">An arrow A → B means <em>A depends on B</em>. Colours show live health from open incidents. When a service
-        fails, everything upstream of the arrows is at risk; the correlation engine uses this graph to suggest root causes.</p>
+    <p class="text-muted">An arrow A → B means <em>A depends on B</em>. Colours show current health from open incidents. When a service
+        fails, the services that depend on it are at risk too.</p>
     <div class="row g-3">
         <div class="col-lg-9"><div id="graph" class="card"></div></div>
         <div class="col-lg-3">

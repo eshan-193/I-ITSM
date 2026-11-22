@@ -5,7 +5,7 @@
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <main class="container-fluid px-4 py-4">
     <h3 class="page-title">Audit log</h3>
-    <p class="text-muted">Every action on every incident, recorded automatically by the audit listener. Entries are never edited.</p>
+    <p class="text-muted">Every action on every incident, recorded automatically. Entries cannot be edited.</p>
     <form class="card card-body mb-3" method="get">
         <div class="row g-2 align-items-end">
             <div class="col-md-2"><label class="form-label small mb-0">Incident</label><input class="form-control form-control-sm" name="incident" th:value="${incident}" placeholder="INC1001"></div>

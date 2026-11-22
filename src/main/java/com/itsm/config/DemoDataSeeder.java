@@ -340,7 +340,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         log(i, created, i.getReporter(), "CREATED", null, IncidentStatus.NEW,
                 "Incident created by " + i.getReporter().getName() + " for service " + service);
         step(i, created, null, "CLASSIFIED", () -> i.classify(cat.get(category), ClassificationSource.KEYWORD, 0.82, created),
-                "Classified as " + cat.get(category).getName() + " by Keyword/TF-IDF classifier (82% confidence)");
+                "Classified as " + cat.get(category).getName() + " automatically (82% confidence)");
         PriorityResult p = priorityService.calculate(i);
         SlaPolicy policy = slaService.policyFor(p.priority(), i.getService());
         i.applyPriority(p, policy, created);

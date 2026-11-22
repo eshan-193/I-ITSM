@@ -6,7 +6,7 @@
 <main class="container py-4" style="max-width: 980px">
     <div th:replace="~{fragments/layout :: flash}"></div>
     <h3 class="page-title">Strategies &amp; settings</h3>
-    <p class="text-muted">These take effect immediately, with no restart. Each strategy is a separate class behind a common interface (Strategy pattern).</p>
+    <p class="text-muted">Changes take effect immediately.</p>
     <form th:action="@{/admin/settings}" method="post">
         <div class="card mb-3">
             <div class="card-header">Technician assignment strategy</div>
@@ -24,7 +24,7 @@
             </div>
         </div>
         <div class="card mb-3">
-            <div class="card-header">Priority algorithm</div>
+            <div class="card-header">Priority calculation</div>
             <div class="card-body">
                 <div class="form-check mb-2" th:each="c : ${calculators}">
                     <input class="form-check-input" type="radio" name="PRIORITY_CALCULATOR" th:value="${c.key()}" th:id="'pc' + ${c.key()}"
@@ -50,7 +50,7 @@
                     <label class="form-check-label" for="esc">Auto-escalate unacknowledged P1/P2 (Technician → Team Lead → IT Manager)</label></div></div>
                 <div class="col-md-6"><div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="AI_ENABLED" value="true" id="ai" th:checked="${settings['AI_ENABLED'] == 'true'}">
-                    <label class="form-check-label" for="ai">Use Gemini AI when an API key is configured</label></div></div>
+                    <label class="form-check-label" for="ai">Use AI assistance when available</label></div></div>
             </div>
         </div>
         <button class="btn btn-primary">Save settings</button>
