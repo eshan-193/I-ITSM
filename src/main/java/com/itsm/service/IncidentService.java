@@ -337,6 +337,12 @@ public class IncidentService {
         if (type == CommentType.INFO_REQUEST || type == CommentType.INFO_RESPONSE) {
             throw new ValidationException("Use the request/provide information actions for this message type");
         }
+        // A reporter replying in the conversation while the technician waits for them is answering
+        // the question, so it counts as providing the information: work resumes and the SLA clock restarts.
+        if (incident.getStatus() == IncidentStatus.AWAITING_INFO && actor.isReporterOf(incident)) {
+            List<Comment> comments = provideInfo(id, actor, text).getComments();
+            return comments.get(comments.size() - 1);
+        }
         LocalDateTime now = now();
         Comment comment = incident.addComment(actor, text, type, now);
         publish(new CommentAddedEvent(incident, actor, now, comment));

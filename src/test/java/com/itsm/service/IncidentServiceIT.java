@@ -205,4 +205,23 @@ class IncidentServiceIT {
         assertThat(i.getPriority().isHigherThan(before)).isTrue();
         assertThatThrownBy(() -> incidentService.join(i.getId(), user("dev@itsm.local"))).isInstanceOf(ValidationException.class);
     }
+
+    @Test
+    @DisplayName("TC-50 A reporter's reply in the conversation answers an information request and resumes the SLA")
+    void reporterReplyResumesWork() {
+        User reporter = user("vikram@itsm.local");
+        Incident i = reportPaymentOutage(reporter);
+        User tech = i.getAssignee();
+        incidentService.acknowledge(i.getId(), tech);
+        incidentService.startWork(i.getId(), tech);
+        incidentService.requestInfo(i.getId(), tech, "Does it fail for all card types?");
+        assertThat(i.getStatus()).isEqualTo(IncidentStatus.AWAITING_INFO);
+        assertThat(i.getSla().isPaused()).isTrue();
+
+        Comment reply = incidentService.addComment(i.getId(), reporter, "All cards fail after the OTP step.", CommentType.UPDATE);
+
+        assertThat(i.getStatus()).isEqualTo(IncidentStatus.IN_PROGRESS);
+        assertThat(i.getSla().isPaused()).isFalse();
+        assertThat(reply.getType()).isEqualTo(CommentType.INFO_RESPONSE);
+    }
 }
