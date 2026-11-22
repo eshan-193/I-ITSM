@@ -19,7 +19,27 @@
         return div.innerHTML;
     };
 
-    itsm.toast = function (message, color, link) {
+    // Several pages reload themselves when an incident changes, which would wipe a toast that
+    // has only just appeared. Live toasts are therefore remembered for a few seconds in
+    // sessionStorage and shown again after such a reload.
+    const PENDING_KEY = 'itsm.pendingToasts';
+    const PENDING_MS = 8000;
+
+    function readPending() {
+        try {
+            return JSON.parse(sessionStorage.getItem(PENDING_KEY) || '[]').filter(t => Date.now() - t.at < PENDING_MS);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function writePending(list) {
+        try {
+            sessionStorage.setItem(PENDING_KEY, JSON.stringify(list));
+        } catch (e) { /* storage unavailable: the toast simply is not carried over */ }
+    }
+
+    itsm.toast = function (message, color, link, pendingId) {
         const area = document.getElementById('toastArea');
         if (!area) return;
         const el = document.createElement('div');
@@ -30,7 +50,10 @@
             + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
         area.appendChild(el);
         new bootstrap.Toast(el, {delay: 7000}).show();
-        el.addEventListener('hidden.bs.toast', () => el.remove());
+        el.addEventListener('hidden.bs.toast', () => {
+            el.remove();
+            if (pendingId) writePending(readPending().filter(t => t.id !== pendingId));
+        });
     };
 
     function bumpBell() {
@@ -42,11 +65,18 @@
 
     // Live updates: only when logged in (the navbar bell exists).
     if (document.getElementById('bellCount') && window.EventSource) {
+        readPending().forEach(t => itsm.toast(t.message, t.color, t.link, t.id));
+
         const source = new EventSource('/live/stream');
         source.addEventListener('notification', (e) => {
             const data = JSON.parse(e.data);
+            const toast = {
+                id: Date.now() + '-' + Math.random(), at: Date.now(), message: data.message, color: data.severity,
+                link: data.incidentId ? '/incidents/' + data.incidentId : null
+            };
+            writePending(readPending().concat(toast));
             bumpBell();
-            itsm.toast(data.message, data.severity, data.incidentId ? '/incidents/' + data.incidentId : null);
+            itsm.toast(toast.message, toast.color, toast.link, toast.id);
         });
         let timer = null;
         source.addEventListener('incident-changed', (e) => {
