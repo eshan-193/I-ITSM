@@ -4,7 +4,7 @@ All test cases are automated and run with `./mvnw test` (unit tests need no data
 tests start the full Spring application on an in-memory H2 database with the demo data). Each test's
 `@DisplayName` starts with its ID, so the IDs below match the test report.
 
-**Result of the last run: 67 tests executed (49 documented cases, some parameterised), 0 failures.**
+**Result of the last run: 68 tests executed (50 documented cases, some parameterised), 0 failures.**
 
 Coverage by required category: normal operations, boundary conditions, invalid inputs, exceptions,
 authorization, business rules, plus intelligent features and background processing.
@@ -60,6 +60,7 @@ authorization, business rules, plus intelligent features and background processi
 | TC-47 | Each role gets its own home page | Normal | Integration | `WebSecurityIT` | Pass |
 | TC-48 | REST API returns problem JSON for missing incidents and validates input | Exception: not found / invalid input | Integration | `WebSecurityIT` | Pass |
 | TC-49 | Live analysis API suggests category and predicts priority | Intelligent feature | Integration | `WebSecurityIT` | Pass |
+| TC-50 | A reporter's reply in the conversation answers an information request and resumes the SLA | Business rule | Integration | `IncidentServiceIT` | Pass |
 
 ## Exception coverage
 

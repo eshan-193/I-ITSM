@@ -131,6 +131,38 @@ Seven intelligent or automated features are implemented (the brief requires two)
 
 {{DESIGN:6}}
 
+## 6.6 AI assistance (Google Gemini)
+
+AI is optional. Every AI feature has an offline algorithm behind the same interface, so the system works
+the same way without a key, and the AI only improves the suggestions.
+
+**Where it is used.**
+
+* **AI quick report.** An employee describes the problem in one sentence. The prompt sent to Gemini
+  includes the list of real IT services and asks for a strict JSON reply: title, service, impact, urgency
+  and number of affected users. The reply is not trusted blindly. The service must match one that exists
+  in the database, and impact and urgency must be valid values, otherwise safe defaults are used. The
+  category still comes from our own classifier. The employee checks the pre-filled form before submitting.
+* **Automatic categorisation.** Gemini suggests a category; the keyword + TF-IDF classifier is used when
+  AI is off or fails.
+* **Suggested resolutions.** Similar resolved incidents are found offline; Gemini can turn their fixes into
+  concrete troubleshooting steps.
+
+**Design.** The application only knows the `LlmClient` interface (`isAvailable()`, `providerName()`,
+`generateJson()`). `GeminiLlmClient` is the Adapter that implements it over the Gemini REST API, so
+another provider needs one new class and no other change.
+
+**How it fails safely.** Each AI call has a time limit (15 s per request, 20 s in total). If the main
+model is overloaded, backup models are tried in order. If all of them fail, a circuit breaker skips AI for
+two minutes and the offline algorithms answer instantly. A provider error or malformed reply raises
+`ExternalServiceException`, which is caught and replaced by the offline result, so the user never sees a
+failure.
+
+**Turning it on.** Set the `GEMINI_API_KEY` environment variable (a free key from Google AI Studio) and
+make sure *Use AI assistance when available* is switched on under Configure → Strategies & settings.
+The top bar shows **AI on**, or **AI offline mode** when the built-in analysis is being used. The key is
+read from the environment only and is never stored in the code or the repository.
+
 # 7. Technology Stack and Selection
 
 ## Technologies used
@@ -247,6 +279,7 @@ src/main/java/com/itsm
 ```
 ./mvnw spring-boot:run                                    # PostgreSQL
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=h2      # H2 file database
+GEMINI_API_KEY=your-key ./mvnw spring-boot:run            # with AI features on
 ./mvnw test                                               # automated tests
 ```
 
